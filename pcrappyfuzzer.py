@@ -38,7 +38,7 @@ def mutate(payload):
         p = Popen(radamsa, stdin=PIPE, stdout=PIPE)
         mutated_data = p.communicate(payload)[0]
     except:
-        print "Could not execute 'radamsa'."
+        print("Could not execute 'radamsa'.")
         sys.exit(1)
 
     return mutated_data
@@ -83,19 +83,19 @@ def main():
     if result.host:
         HOST=result.host
     if result.port:
-        PORT=result.port
+        PORT=int(result.port)
     if result.fuzz:
         FUZZ_FACTOR=result.fuzz
     if result.file:
         PCAP_LOCATION=result.file
     if not os.path.exists(PCAP_LOCATION):
-        print "{} file not found. Please check".format(PCAP_LOCATION)
+        print("{} file not found. Please check".format(PCAP_LOCATION))
         exit(1)
     pktcounter = 0
     packets = scapy.rdpcap(PCAP_LOCATION)
     random.seed(time.time())
 
-    print "This pcap contains a total of %d packets. Parsing..." % len(packets)
+    print("This pcap contains a total of %d packets. Parsing..." % len(packets))
 
     '''
     Extract the payload of all client->server packets, put them in an
@@ -113,8 +113,8 @@ def main():
                 servers_list.append(pkt['IP'].dst)
 
         if VERBOSE:
-            print "Parsing packet #%d" % pktcounter
-            print pkt.summary()
+            print("Parsing packet #%d" % pktcounter)
+            print(pkt.summary())
         pktcounter += 1
 
         try:
@@ -125,7 +125,7 @@ def main():
                 as we're fuzzing the back-end application
                 '''
                 if pkt['IP'].src in clients_list:
-                    print "Packet #%d has some client->server raw data. Go fuzz!" % pktcounter
+                    print("Packet #%d has some client->server raw data. Go fuzz!" % pktcounter)
                     packet_payload = pkt['Raw']
                     packets_list.append((pktcounter, str(packet_payload)))
         except IndexError:
@@ -136,7 +136,7 @@ def main():
 
     while True:
         iterations_str = "[+] Fuzzing iteration number #%d" % fuzz_iterations
-        print iterations_str
+        print(iterations_str)
 
         try:
             fuzz_iterations += 1
@@ -151,21 +151,21 @@ def main():
                     payload = mutate(payload)
 
                 iterations_str += "\n" + "--- Payload ---\n" + payload + "\n"
-                print payload
+                print(payload)
 
                 ssl_sockfd.send(payload)
                 received_buffer = ssl_sockfd.recv(2048)
 
                 iterations_str += "\n" + "--- Received ---\n" + received_buffer + "\n"
-                print received_buffer
+                print(received_buffer)
 
                 log_events(iterations_str + '\n', "fuzzing")
 
-                print ""
+                print("")
 
         except Exception as err:
             error_str = "[!] Error during iteration #%d: %s" % (fuzz_iterations, str(err))
-            print error_str
+            print(error_str)
             log_str = error_str + '\n' + iterations_str
             log_events(log_str, "error")
 
